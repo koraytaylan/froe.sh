@@ -1,0 +1,19 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "froe",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-09-29",
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "404-page",
+    // The worker runs first so www can 301 to the apex before any file is served.
+    "run_worker_first": true
+  },
+  "routes": [
+    { "pattern": "froe.sh", "custom_domain": true },
+    // Attached so www can 301 to the apex. The site is not served there.
+    { "pattern": "www.froe.sh", "custom_domain": true }
+  ]
+}
