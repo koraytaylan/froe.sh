@@ -21,6 +21,7 @@
 .syn-keyword,.syn-command{color:#a6b8d8}.syn-string{color:#b7c5b0}.syn-function,.syn-flag{color:#c2cbd8}.syn-number{color:#b1bccd}.syn-comment{color:#919baa}.syn-punctuation{color:#929cab}
 .start+.start{margin-top:0;border-top:0}.start p a{color:var(--accent)}.downloads{align-self:center;min-width:0}.downloads small{overflow-wrap:anywhere}.doc-links .asset-name{font-family:var(--mono);font-size:12px}
 .ext{text-decoration:underline;text-decoration-color:#a0a6b040;text-underline-offset:4px;text-decoration-thickness:1px}.ext:hover{text-decoration-color:var(--accent)}
+.query-model{padding:6px 0 30px}.query-model code{font-family:var(--mono);font-size:.9em;color:var(--fg)}
 </style>
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareSourceCode", "name": "Froe", "description": "Rust CLI and library for Apache Jackrabbit Oak segment-tar repository inspection, content export and offline maintenance.", "codeRepository": "https://github.com/koraytaylan/froe", "programmingLanguage": "Rust", "license": "https://www.apache.org/licenses/LICENSE-2.0", "url": "https://froe.sh/"}</script>
 </head>
@@ -65,6 +66,7 @@
 </div></section>
 <section class="query-examples" id="examples" aria-labelledby="examples-heading"><div class="section-head"><h2 id="examples-heading">SQL over an AEM repository export</h2><span class="section-meta">25 recipes</span></div>
 <p class="section-intro">Export the whole tree once, then query the files; these examples read exported data and do not modify the repository.</p>
+<div class="operating-model query-model"><article><span class="mode">JCR-SQL2 · INSIDE OAK</span><h3>Selects nodes. Needs an index.</h3><p>No <code>COUNT</code>, <code>GROUP BY</code>, <code>HAVING</code>, CTEs or window functions. A query no index covers traverses the repository on the running instance, and Oak stops it after 100,000 reads by default.</p></article><article><span class="mode">SQL · OVER AN EXPORT</span><h3>Any query. No index to plan for.</h3><p>Aggregates, CTEs, window functions and joins in DuckDB or SQLite, against files on your machine. Every query scans or joins the export; none of them can slow down the instance.</p></article></div>
 <div class="export-setup"><pre><code><span class="syn-comment"># Choose the format for your SQL client</span>
 <span class="syn-command">froe</span> export /path/to/segmentstore <span class="syn-flag">--format</span> parquet <span class="syn-flag">--output</span> ./export
 <span class="syn-command">froe</span> export /path/to/segmentstore <span class="syn-flag">--format</span> sqlite <span class="syn-flag">--output</span> ./export.db</code></pre></div>
