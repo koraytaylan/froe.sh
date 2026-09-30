@@ -1,3 +1,4 @@
+# https://froe.sh
 User-agent: *
 Allow: /
 

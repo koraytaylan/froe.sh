@@ -1,0 +1,18 @@
+# Froe
+
+> A Rust CLI and library for reading and maintaining Apache Jackrabbit Oak segment stores (segment-tar / TarMK), including those used by AEM. Directly from disk: no running Oak instance, no JVM.
+
+Read commands take no lock and write nothing, so they work on a live or stopped repository. Maintenance (compaction, backup, restore, journal recovery, checkpoints) needs a stopped repository and an exclusive lock, and asks for confirmation. Exports produce JSON lines, Parquet or SQLite for querying in DuckDB or SQLite.
+
+## Docs
+
+- [The site, in markdown](https://froe.sh/index.md): The same account as the homepage, without the page chrome.
+- [Source](https://github.com/koraytaylan/froe): The CLI, the core library and the documentation. Apache-2.0 license.
+- [API reference](https://docs.rs/froe): The core crate's repository traversal API.
+
+## Optional
+
+- [Working with a store](https://froe.sh/index.md#commands): Inspect, export, maintain and index commands.
+- [Build from source](https://froe.sh/index.md#build): Clone, `cargo build --release`, one binary.
+- [SQL over an AEM repository export](https://froe.sh/index.md#examples): Thirteen DuckDB and SQLite recipes for auditing exported content.
+- [Implementation & reference](https://froe.sh/index.md#reference): Store versions, Oak interoperability and the storage-format, maintenance, index and feature-map documents.
