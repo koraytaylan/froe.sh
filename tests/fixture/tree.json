@@ -1,0 +1,335 @@
+{
+  "/": {
+    "primary_type": "rep:root",
+    "properties": {}
+  },
+  "/content": {
+    "primary_type": "sling:Folder",
+    "properties": {}
+  },
+  "/content/mysite": {
+    "primary_type": "cq:Page",
+    "properties": {}
+  },
+  "/content/mysite/jcr:content": {
+    "primary_type": "cq:PageContent",
+    "properties": {
+      "jcr:title": {
+        "type": "String",
+        "value": "My Site"
+      },
+      "jcr:description": {
+        "type": "String",
+        "value": "Home"
+      },
+      "cq:template": {
+        "type": "String",
+        "value": "/conf/mysite/settings/wcm/templates/page-content"
+      },
+      "cq:lastModified": {
+        "type": "Date",
+        "value": "2024-06-01T10:00:00.000+02:00"
+      },
+      "cq:lastModifiedBy": {
+        "type": "String",
+        "value": "admin"
+      },
+      "sling:resourceType": {
+        "type": "String",
+        "value": "mysite/components/page"
+      }
+    }
+  },
+  "/content/mysite/en": {
+    "primary_type": "cq:Page",
+    "properties": {}
+  },
+  "/content/mysite/en/jcr:content": {
+    "primary_type": "cq:PageContent",
+    "properties": {
+      "jcr:title": {
+        "type": "String",
+        "value": "English"
+      },
+      "jcr:description": {
+        "type": "String",
+        "value": ""
+      },
+      "cq:template": {
+        "type": "String",
+        "value": "/conf/mysite/settings/wcm/templates/article-page"
+      },
+      "cq:tags": {
+        "type": "String",
+        "value": [
+          "mysite:topics/news",
+          "mysite:topics/tech"
+        ]
+      },
+      "cq:lastModified": {
+        "type": "Date",
+        "value": "2025-03-01T00:30:00.000+01:00"
+      },
+      "cq:lastModifiedBy": {
+        "type": "String",
+        "value": "jane"
+      },
+      "sling:resourceType": {
+        "type": "String",
+        "value": "mysite/components/page"
+      }
+    }
+  },
+  "/content/mysite/en/jcr:content/root": {
+    "primary_type": "nt:unstructured",
+    "properties": {
+      "sling:resourceType": {
+        "type": "String",
+        "value": "mysite/components/container"
+      }
+    }
+  },
+  "/content/mysite/en/jcr:content/root/teaser": {
+    "primary_type": "nt:unstructured",
+    "properties": {
+      "sling:resourceType": {
+        "type": "String",
+        "value": "mysite/components/teaser"
+      },
+      "fileReference": {
+        "type": "String",
+        "value": "/content/dam/mysite/logo.svg"
+      }
+    }
+  },
+  "/content/mysite/en/jcr:content/root/xf": {
+    "primary_type": "nt:unstructured",
+    "properties": {
+      "sling:resourceType": {
+        "type": "String",
+        "value": "cq/experience-fragments/editor/components/experiencefragment"
+      },
+      "fragmentVariationPath": {
+        "type": "String",
+        "value": "/content/experience-fragments/mysite/footer/master"
+      }
+    }
+  },
+  "/content/mysite/en/news": {
+    "primary_type": "cq:Page",
+    "properties": {}
+  },
+  "/content/mysite/en/news/jcr:content": {
+    "primary_type": "cq:PageContent",
+    "properties": {
+      "jcr:title": {
+        "type": "String",
+        "value": "News"
+      },
+      "cq:template": {
+        "type": "String",
+        "value": "/conf/mysite/settings/wcm/templates/article-page"
+      },
+      "cq:tags": {
+        "type": "String",
+        "value": [
+          "mysite:topics/news"
+        ]
+      },
+      "cq:lastModified": {
+        "type": "Date",
+        "value": "2024-12-31T23:30:00.000-01:00"
+      },
+      "cq:lastModifiedBy": {
+        "type": "String",
+        "value": "jane"
+      },
+      "cq:redirectTarget": {
+        "type": "String",
+        "value": "/content/mysite/en"
+      },
+      "sling:resourceType": {
+        "type": "String",
+        "value": "mysite/components/page"
+      },
+      "cq:lastReplicationAction": {
+        "type": "String",
+        "value": "Activate"
+      }
+    }
+  },
+  "/content/mysite/en/news/jcr:content/image": {
+    "primary_type": "nt:unstructured",
+    "properties": {
+      "fileReference": {
+        "type": "String",
+        "value": "/content/dam/mysite/logo.svg"
+      }
+    }
+  },
+  "/content/mysite/en/news/jcr:content/root": {
+    "primary_type": "nt:unstructured",
+    "properties": {
+      "sling:resourceType": {
+        "type": "String",
+        "value": "mysite/components/container"
+      }
+    }
+  },
+  "/content/mysite/en/news/jcr:content/root/teaser_1": {
+    "primary_type": "nt:unstructured",
+    "properties": {
+      "sling:resourceType": {
+        "type": "String",
+        "value": "mysite/components/teaser"
+      }
+    }
+  },
+  "/content/mysite/en/old": {
+    "primary_type": "cq:Page",
+    "properties": {}
+  },
+  "/content/mysite/en/old/jcr:content": {
+    "primary_type": "cq:PageContent",
+    "properties": {
+      "cq:template": {
+        "type": "String",
+        "value": "/apps/mysite/templates/legacy"
+      },
+      "cq:redirectTarget": {
+        "type": "String",
+        "value": "https://example.com/"
+      },
+      "sling:resourceType": {
+        "type": "String",
+        "value": "mysite/components/page"
+      }
+    }
+  },
+  "/content/experience-fragments": {
+    "primary_type": "sling:Folder",
+    "properties": {}
+  },
+  "/content/experience-fragments/mysite/footer": {
+    "primary_type": "cq:Page",
+    "properties": {}
+  },
+  "/content/dam": {
+    "primary_type": "sling:Folder",
+    "properties": {}
+  },
+  "/content/dam/mysite": {
+    "primary_type": "sling:Folder",
+    "properties": {}
+  },
+  "/content/dam/mysite/logo.svg": {
+    "primary_type": "dam:Asset",
+    "properties": {}
+  },
+  "/content/dam/mysite/logo.svg/jcr:content": {
+    "primary_type": "dam:AssetContent",
+    "properties": {}
+  },
+  "/content/dam/mysite/logo.svg/jcr:content/metadata": {
+    "primary_type": "nt:unstructured",
+    "properties": {
+      "dc:format": {
+        "type": "String",
+        "value": "image/svg+xml"
+      }
+    }
+  },
+  "/content/dam/mysite/logo.svg/jcr:content/renditions/original": {
+    "primary_type": "nt:file",
+    "properties": {}
+  },
+  "/content/dam/mysite/logo.svg/jcr:content/renditions/original/jcr:content": {
+    "primary_type": "oak:Resource",
+    "properties": {
+      "jcr:data": {
+        "type": "Binary",
+        "value": 1234
+      }
+    }
+  },
+  "/content/dam/mysite/hero.jpg": {
+    "primary_type": "dam:Asset",
+    "properties": {}
+  },
+  "/content/dam/mysite/hero.jpg/jcr:content": {
+    "primary_type": "dam:AssetContent",
+    "properties": {}
+  },
+  "/content/dam/mysite/hero.jpg/jcr:content/metadata": {
+    "primary_type": "nt:unstructured",
+    "properties": {
+      "dc:format": {
+        "type": "String",
+        "value": "image/jpeg"
+      }
+    }
+  },
+  "/content/dam/mysite/hero.jpg/jcr:content/renditions/original": {
+    "primary_type": "nt:file",
+    "properties": {}
+  },
+  "/content/dam/mysite/hero.jpg/jcr:content/renditions/original/jcr:content": {
+    "primary_type": "oak:Resource",
+    "properties": {
+      "jcr:data": {
+        "type": "Binary",
+        "value": "ext#abc"
+      }
+    }
+  },
+  "/content/dam/mysite/cf": {
+    "primary_type": "sling:Folder",
+    "properties": {}
+  },
+  "/content/dam/mysite/cf/article-1": {
+    "primary_type": "dam:Asset",
+    "properties": {}
+  },
+  "/content/dam/mysite/cf/article-1/jcr:content": {
+    "primary_type": "dam:AssetContent",
+    "properties": {
+      "contentFragment": {
+        "type": "Boolean",
+        "value": true
+      }
+    }
+  },
+  "/content/dam/mysite/cf/article-1/jcr:content/data": {
+    "primary_type": "nt:unstructured",
+    "properties": {
+      "cq:model": {
+        "type": "String",
+        "value": "/conf/mysite/settings/dam/cfm/models/article"
+      }
+    }
+  },
+  "/oak:index": {
+    "primary_type": "nt:unstructured",
+    "properties": {}
+  },
+  "/oak:index/lucene": {
+    "primary_type": "oak:QueryIndexDefinition",
+    "properties": {
+      "type": {
+        "type": "String",
+        "value": "lucene"
+      },
+      "async": {
+        "type": "String",
+        "value": [
+          "async",
+          "nrt"
+        ]
+      },
+      "reindex": {
+        "type": "Boolean",
+        "value": false
+      }
+    }
+  }
+}

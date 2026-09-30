@@ -10,6 +10,7 @@ The website for [Froe](https://github.com/koraytaylan/froe), a Rust CLI and libr
 | `public/index.md` | The page in markdown, generated from `index.html` by `scripts/index-md.py`. |
 | `public/llms.txt`, `robots.txt`, `sitemap.xml` | Crawler and LLM entry points. |
 | `public/og.jpg`, `favicon.*`, `apple-touch-icon.png` | Share card and icons; `og.jpg` is a 1200×630 headless Chrome screenshot of `scripts/og.html`. |
+| `scripts/check-recipes.py`, `tests/fixture/` | Runs every SQL recipe on the page against a small AEM-like export, in DuckDB and SQLite. |
 | `src/worker.js` | Cloudflare Worker in front of the static files; sends `http://` and `www.froe.sh` to `https://froe.sh` with a 301. |
 | `wrangler.jsonc` | Worker name, static assets and the `froe.sh` / `www.froe.sh` custom domains. |
 
@@ -23,6 +24,14 @@ Edit `public/index.html`, then regenerate the markdown copy:
 python3 scripts/index-md.py
 ```
 
+After touching a recipe, check that both dialects still run and agree (needs the [DuckDB CLI](https://duckdb.org/docs/installation/) on `PATH`, or its path in `$DUCKDB`):
+
+```sh
+python3 scripts/check-recipes.py
+```
+
+The fixture is `tests/fixture/tree.json`; `tests/fixture/sqlite-schema.sql` is the schema `froe export` creates, copied from the froe repository.
+
 Preview locally with Wrangler:
 
 ```sh
@@ -31,7 +40,7 @@ npx wrangler@4 dev
 
 ## Deploying
 
-Every push to `main` deploys through `.github/workflows/cloudflare.yml`, which regenerates `index.md` and runs `wrangler deploy`. It can also be run by hand from the Actions tab.
+Every push to `main` runs `.github/workflows/cloudflare.yml`: it checks the recipes, then regenerates `index.md` and runs `wrangler deploy`. A failing recipe stops the deploy. It can also be run by hand from the Actions tab.
 
 The workflow needs two repository secrets:
 
