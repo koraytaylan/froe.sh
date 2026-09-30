@@ -9,7 +9,7 @@ The website for [Froe](https://github.com/koraytaylan/froe), a Rust CLI and libr
 | `public/index.html` | The page: one self-contained HTML file, styles and scripts inline. |
 | `public/index.md` | The page in markdown, generated from `index.html` by `scripts/index-md.py`. |
 | `public/llms.txt`, `robots.txt`, `sitemap.xml` | Crawler and LLM entry points. |
-| `public/og.jpg`, `favicon.*`, `apple-touch-icon.png` | Share card and icons. |
+| `public/og.jpg`, `favicon.*`, `apple-touch-icon.png` | Share card and icons; `og.jpg` is a 1200×630 headless Chrome screenshot of `scripts/og.html`. |
 | `src/worker.js` | Cloudflare Worker in front of the static files; sends `http://` and `www.froe.sh` to `https://froe.sh` with a 301. |
 | `wrangler.jsonc` | Worker name, static assets and the `froe.sh` / `www.froe.sh` custom domains. |
 
