@@ -16,5 +16,5 @@ Read commands take no lock and write nothing, so they work on a live or stopped 
 - [Working with a store](https://froe.sh/index.md#commands): Inspect, export, maintain and index commands.
 - [Download](https://froe.sh/index.md#download): Prebuilt Linux, macOS and Windows binaries from the latest GitHub release.
 - [Build from source](https://froe.sh/index.md#build): Clone, `cargo build --release`, one binary.
-- [SQL over an AEM repository export](https://froe.sh/index.md#examples): Thirteen DuckDB and SQLite recipes for auditing exported content.
+- [SQL over an AEM repository export](https://froe.sh/index.md#examples): Twenty-five DuckDB and SQLite recipes for auditing exported content: component, template, tag and asset usage across pages, stale and redirecting pages, DAM formats, content fragment models and more.
 - [Implementation & reference](https://froe.sh/index.md#reference): Store versions, Oak interoperability and the storage-format, maintenance, index and feature-map documents.

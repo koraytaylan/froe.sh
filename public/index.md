@@ -96,7 +96,7 @@ cargo build --release
 <a id="examples"></a>
 ## SQL over an AEM repository export
 
-Export the whole tree once, then query the files; these 13 recipes read exported data and do not modify the repository.
+Export the whole tree once, then query the files; these 25 recipes read exported data and do not modify the repository.
 
 ```sh
 # Choose the format for your SQL client
@@ -139,6 +139,350 @@ sqlite3 ./export.db "
     AND path LIKE '/content/%'
   GROUP BY 1
   ORDER BY pages DESC;"
+```
+
+<a id="component-pages"></a>
+### AEM pages using a component
+
+List pages whose content contains a component with the given sling:resourceType; replace mysite/components/teaser with yours.
+
+DuckDB over Parquet:
+
+```sh
+duckdb -c "
+  SELECT DISTINCT n.path AS page
+  FROM './export/properties.parquet' p
+  JOIN './export/nodes.parquet' n
+    ON n.path = split_part(p.path, '/jcr:content/', 1)
+  WHERE p.name = 'sling:resourceType'
+    AND p.value = 'mysite/components/teaser'
+    AND n.primary_type = 'cq:Page'
+  ORDER BY 1;"
+```
+
+SQLite:
+
+```sh
+sqlite3 ./export.db "
+  SELECT DISTINCT n.path AS page
+  FROM properties_expanded p
+  JOIN node_paths n
+    ON n.path = substr(p.path, 1, instr(p.path, '/jcr:content/') - 1)
+  WHERE p.name = 'sling:resourceType'
+    AND p.value = 'mysite/components/teaser'
+    AND n.primary_type = 'cq:Page'
+  ORDER BY 1;"
+```
+
+<a id="template-pages"></a>
+### AEM pages using a template
+
+List pages whose jcr:content names the given cq:template; editable templates live under /conf, static ones under /apps.
+
+DuckDB over Parquet:
+
+```sh
+duckdb -c "
+  SELECT n.path AS page
+  FROM './export/properties.parquet' p
+  JOIN './export/nodes.parquet' n
+    ON p.path = n.path || '/jcr:content'
+  WHERE p.name = 'cq:template'
+    AND p.value = '/conf/mysite/settings/wcm/templates/article-page'
+    AND n.primary_type = 'cq:Page'
+  ORDER BY 1;"
+```
+
+SQLite:
+
+```sh
+sqlite3 ./export.db "
+  SELECT n.path AS page
+  FROM properties_expanded p
+  JOIN node_paths n
+    ON p.path = n.path || '/jcr:content'
+  WHERE p.name = 'cq:template'
+    AND p.value = '/conf/mysite/settings/wcm/templates/article-page'
+    AND n.primary_type = 'cq:Page'
+  ORDER BY 1;"
+```
+
+<a id="template-usage"></a>
+### AEM page counts by template
+
+Count pages per cq:template; templates no page uses do not appear.
+
+DuckDB over Parquet:
+
+```sh
+duckdb -c "
+  SELECT p.value AS template, count(*) AS pages
+  FROM './export/properties.parquet' p
+  JOIN './export/nodes.parquet' n
+    ON p.path = n.path || '/jcr:content'
+  WHERE p.name = 'cq:template'
+    AND n.primary_type = 'cq:Page'
+  GROUP BY 1
+  ORDER BY pages DESC, 1;"
+```
+
+SQLite:
+
+```sh
+sqlite3 ./export.db "
+  SELECT p.value AS template, count(*) AS pages
+  FROM properties_expanded p
+  JOIN node_paths n
+    ON p.path = n.path || '/jcr:content'
+  WHERE p.name = 'cq:template'
+    AND n.primary_type = 'cq:Page'
+  GROUP BY 1
+  ORDER BY pages DESC, 1;"
+```
+
+<a id="tagged-pages"></a>
+### AEM pages with a tag
+
+cq:tags is multivalued, so each tag is its own row; match the form your repository stores, a tag ID or a /content/cq:tags path.
+
+DuckDB over Parquet:
+
+```sh
+duckdb -c "
+  SELECT n.path AS page
+  FROM './export/properties.parquet' p
+  JOIN './export/nodes.parquet' n
+    ON p.path = n.path || '/jcr:content'
+  WHERE p.name = 'cq:tags'
+    AND p.value = 'mysite:topics/news'
+    AND n.primary_type = 'cq:Page'
+  ORDER BY 1;"
+```
+
+SQLite:
+
+```sh
+sqlite3 ./export.db "
+  SELECT n.path AS page
+  FROM properties_expanded p
+  JOIN node_paths n
+    ON p.path = n.path || '/jcr:content'
+  WHERE p.name = 'cq:tags'
+    AND p.value = 'mysite:topics/news'
+    AND n.primary_type = 'cq:Page'
+  ORDER BY 1;"
+```
+
+<a id="asset-pages"></a>
+### AEM pages referencing an asset
+
+Find pages with a property whose value is exactly the asset path, such as fileReference; links inside rich text are not matched.
+
+DuckDB over Parquet:
+
+```sh
+duckdb -c "
+  SELECT DISTINCT n.path AS page, p.name AS property
+  FROM './export/properties.parquet' p
+  JOIN './export/nodes.parquet' n
+    ON n.path = split_part(p.path || '/', '/jcr:content/', 1)
+  WHERE p.value = '/content/dam/mysite/logo.svg'
+    AND n.primary_type = 'cq:Page'
+  ORDER BY 1, 2;"
+```
+
+SQLite:
+
+```sh
+sqlite3 ./export.db "
+  SELECT DISTINCT n.path AS page, p.name AS property
+  FROM properties_expanded p
+  JOIN node_paths n
+    ON n.path = substr(p.path, 1, instr(p.path || '/', '/jcr:content/') - 1)
+  WHERE p.value = '/content/dam/mysite/logo.svg'
+    AND n.primary_type = 'cq:Page'
+  ORDER BY 1, 2;"
+```
+
+<a id="fragment-pages"></a>
+### Experience fragments on AEM pages
+
+Map each fragmentVariationPath placed in page content to its page; fragments in editable template structure live under /conf and are not listed.
+
+DuckDB over Parquet:
+
+```sh
+duckdb -c "
+  SELECT p.value AS fragment, n.path AS page
+  FROM './export/properties.parquet' p
+  JOIN './export/nodes.parquet' n
+    ON n.path = split_part(p.path, '/jcr:content/', 1)
+  WHERE p.name = 'fragmentVariationPath'
+    AND n.primary_type = 'cq:Page'
+  ORDER BY 1, 2;"
+```
+
+SQLite:
+
+```sh
+sqlite3 ./export.db "
+  SELECT p.value AS fragment, n.path AS page
+  FROM properties_expanded p
+  JOIN node_paths n
+    ON n.path = substr(p.path, 1, instr(p.path, '/jcr:content/') - 1)
+  WHERE p.name = 'fragmentVariationPath'
+    AND n.primary_type = 'cq:Page'
+  ORDER BY 1, 2;"
+```
+
+<a id="stale-pages"></a>
+### AEM pages not modified since a date
+
+Compare cq:lastModified as a timestamp, so time zone offsets are honored; pages never edited have no cq:lastModified and are not listed.
+
+DuckDB over Parquet:
+
+```sh
+duckdb -c "
+  SELECT n.path AS page, p.value AS last_modified
+  FROM './export/properties.parquet' p
+  JOIN './export/nodes.parquet' n
+    ON p.path = n.path || '/jcr:content'
+  WHERE p.name = 'cq:lastModified'
+    AND p.property_type = 'Date'
+    AND n.primary_type = 'cq:Page'
+    AND CAST(p.value AS TIMESTAMPTZ) < TIMESTAMPTZ '2025-01-01 00:00:00+00'
+  ORDER BY CAST(p.value AS TIMESTAMPTZ);"
+```
+
+SQLite:
+
+```sh
+sqlite3 ./export.db "
+  SELECT n.path AS page, p.value AS last_modified
+  FROM properties_expanded p
+  JOIN node_paths n
+    ON p.path = n.path || '/jcr:content'
+  WHERE p.name = 'cq:lastModified'
+    AND p.property_type = 'Date'
+    AND n.primary_type = 'cq:Page'
+    AND julianday(p.value) < julianday('2025-01-01')
+  ORDER BY julianday(p.value);"
+```
+
+<a id="editors"></a>
+### Last editors by page count
+
+Group pages by cq:lastModifiedBy; only the most recent editor is recorded on the page, earlier ones live in version history.
+
+DuckDB over Parquet:
+
+```sh
+duckdb -c "
+  SELECT p.value AS editor, count(*) AS pages
+  FROM './export/properties.parquet' p
+  JOIN './export/nodes.parquet' n
+    ON p.path = n.path || '/jcr:content'
+  WHERE p.name = 'cq:lastModifiedBy'
+    AND n.primary_type = 'cq:Page'
+  GROUP BY 1
+  ORDER BY pages DESC, 1;"
+```
+
+SQLite:
+
+```sh
+sqlite3 ./export.db "
+  SELECT p.value AS editor, count(*) AS pages
+  FROM properties_expanded p
+  JOIN node_paths n
+    ON p.path = n.path || '/jcr:content'
+  WHERE p.name = 'cq:lastModifiedBy'
+    AND n.primary_type = 'cq:Page'
+  GROUP BY 1
+  ORDER BY pages DESC, 1;"
+```
+
+<a id="missing-descriptions"></a>
+### AEM pages without a description
+
+Find site pages with no non-empty jcr:description, the page property most page components render as the meta description.
+
+DuckDB over Parquet:
+
+```sh
+duckdb -c "
+  SELECT n.path AS page
+  FROM './export/nodes.parquet' n
+  WHERE n.primary_type = 'cq:Page'
+    AND n.path LIKE '/content/%'
+    AND n.path NOT LIKE '/content/experience-fragments/%'
+    AND NOT EXISTS (
+      SELECT 1 FROM './export/properties.parquet' p
+      WHERE p.path = n.path || '/jcr:content'
+        AND p.name = 'jcr:description'
+        AND p.value <> ''
+    )
+  ORDER BY 1;"
+```
+
+SQLite:
+
+```sh
+sqlite3 ./export.db "
+  SELECT n.path AS page
+  FROM node_paths n
+  WHERE n.primary_type = 'cq:Page'
+    AND n.path LIKE '/content/%'
+    AND n.path NOT LIKE '/content/experience-fragments/%'
+    AND NOT EXISTS (
+      SELECT 1 FROM properties_expanded p
+      WHERE p.path = n.path || '/jcr:content'
+        AND p.name = 'jcr:description'
+        AND p.value <> ''
+    )
+  ORDER BY 1;"
+```
+
+<a id="redirects"></a>
+### AEM pages that redirect
+
+List cq:redirectTarget values and whether the target is in the export; external URLs and partial exports report false.
+
+DuckDB over Parquet:
+
+```sh
+duckdb -c "
+  SELECT
+    n.path AS page,
+    p.value AS target,
+    t.path IS NOT NULL AS target_in_export
+  FROM './export/properties.parquet' p
+  JOIN './export/nodes.parquet' n
+    ON p.path = n.path || '/jcr:content'
+  LEFT JOIN './export/nodes.parquet' t
+    ON t.path = p.value
+  WHERE p.name = 'cq:redirectTarget'
+    AND n.primary_type = 'cq:Page'
+  ORDER BY 1;"
+```
+
+SQLite:
+
+```sh
+sqlite3 ./export.db "
+  SELECT
+    n.path AS page,
+    p.value AS target,
+    t.path IS NOT NULL AS target_in_export
+  FROM properties_expanded p
+  JOIN node_paths n
+    ON p.path = n.path || '/jcr:content'
+  LEFT JOIN node_paths t
+    ON t.path = p.value
+  WHERE p.name = 'cq:redirectTarget'
+    AND n.primary_type = 'cq:Page'
+  ORDER BY 1;"
 ```
 
 <a id="oak-indexes"></a>
@@ -217,6 +561,86 @@ sqlite3 ./export.db "
         AND substr(p.path, 1, length(a.path) + 1) <> a.path || '/'
     )
   ORDER BY a.path;"
+```
+
+<a id="asset-formats"></a>
+### DAM assets by MIME type
+
+Group assets by dc:format with the original renditions' sizes; external binaries have no recorded length, so they are counted separately.
+
+DuckDB over Parquet:
+
+```sh
+duckdb -c "
+  SELECT
+    m.value AS mime_type,
+    count(*) AS assets,
+    sum(o.binary_length) AS inline_bytes,
+    count(o.binary_reference) AS external
+  FROM './export/properties.parquet' m
+  JOIN './export/nodes.parquet' a
+    ON m.path = a.path || '/jcr:content/metadata'
+  LEFT JOIN './export/properties.parquet' o
+    ON o.path = a.path || '/jcr:content/renditions/original/jcr:content'
+    AND o.name = 'jcr:data'
+  WHERE m.name = 'dc:format'
+    AND a.primary_type = 'dam:Asset'
+  GROUP BY 1
+  ORDER BY assets DESC, 1;"
+```
+
+SQLite:
+
+```sh
+sqlite3 ./export.db "
+  SELECT
+    m.value AS mime_type,
+    count(*) AS assets,
+    sum(o.binary_length) AS inline_bytes,
+    count(o.binary_reference) AS external
+  FROM properties_expanded m
+  JOIN node_paths a
+    ON m.path = a.path || '/jcr:content/metadata'
+  LEFT JOIN properties_expanded o
+    ON o.path = a.path || '/jcr:content/renditions/original/jcr:content'
+    AND o.name = 'jcr:data'
+  WHERE m.name = 'dc:format'
+    AND a.primary_type = 'dam:Asset'
+  GROUP BY 1
+  ORDER BY assets DESC, 1;"
+```
+
+<a id="fragment-models"></a>
+### Content fragments by model
+
+Count content fragments per cq:model, read from each fragment's jcr:content/data node.
+
+DuckDB over Parquet:
+
+```sh
+duckdb -c "
+  SELECT p.value AS model, count(*) AS fragments
+  FROM './export/properties.parquet' p
+  JOIN './export/nodes.parquet' a
+    ON p.path = a.path || '/jcr:content/data'
+  WHERE p.name = 'cq:model'
+    AND a.primary_type = 'dam:Asset'
+  GROUP BY 1
+  ORDER BY fragments DESC, 1;"
+```
+
+SQLite:
+
+```sh
+sqlite3 ./export.db "
+  SELECT p.value AS model, count(*) AS fragments
+  FROM properties_expanded p
+  JOIN node_paths a
+    ON p.path = a.path || '/jcr:content/data'
+  WHERE p.name = 'cq:model'
+    AND a.primary_type = 'dam:Asset'
+  GROUP BY 1
+  ORDER BY fragments DESC, 1;"
 ```
 
 <a id="types-per-site"></a>

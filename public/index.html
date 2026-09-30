@@ -63,7 +63,7 @@
 <article><h3>Recover a missing journal</h3><p>Use <code>check</code> to inspect consistency, then <code>recover-journal</code> to reconstruct the journal from surviving segments with Oak stopped.</p><a class="text-link" href="https://github.com/koraytaylan/froe/blob/develop/README.md">Recovery workflow</a></article>
 <article><h3>Inspect and rebuild indexes</h3><p>Read index definitions and check their indexed state; dump <a class="ext" href="https://lucene.apache.org/">Lucene</a> data or import and reindex offline, subject to supported features.</p><a class="text-link" href="https://github.com/koraytaylan/froe/blob/develop/docs/index.md">Index guide · import/reindex beta</a></article>
 </div></section>
-<section class="query-examples" id="examples" aria-labelledby="examples-heading"><div class="section-head"><h2 id="examples-heading">SQL over an AEM repository export</h2><span class="section-meta">13 recipes</span></div>
+<section class="query-examples" id="examples" aria-labelledby="examples-heading"><div class="section-head"><h2 id="examples-heading">SQL over an AEM repository export</h2><span class="section-meta">25 recipes</span></div>
 <p class="section-intro">Export the whole tree once, then query the files; these examples read exported data and do not modify the repository.</p>
 <div class="export-setup"><pre><code><span class="syn-comment"># Choose the format for your SQL client</span>
 <span class="syn-command">froe</span> export /path/to/segmentstore <span class="syn-flag">--format</span> parquet <span class="syn-flag">--output</span> ./export
@@ -93,6 +93,250 @@
     <span class="syn-keyword">AND</span> path LIKE <span class="syn-string">&#39;/content/%&#39;</span>
   <span class="syn-keyword">GROUP</span> <span class="syn-keyword">BY</span> <span class="syn-number">1</span>
   <span class="syn-keyword">ORDER</span> <span class="syn-keyword">BY</span> pages <span class="syn-keyword">DESC</span><span class="syn-punctuation">;</span>&quot;</code></pre>
+</div></div></details>
+<details class="recipe" id="component-pages">
+<summary><span>AEM pages using a component</span><span class="disclosure" aria-hidden="true">+</span></summary>
+<div class="recipe-body"><div class="recipe-note"><p>List pages whose content contains a component with the given sling:resourceType; replace mysite/components/teaser with yours.</p><a class="text-link" href="#component-pages" aria-label="Link to AEM pages using a component">Link to example</a></div><div class="recipe-code">
+<div class="recipe-toolbar"><span class="dialect-name">DuckDB / Parquet</span><button class="copy-query" aria-label="Copy AEM pages using a component query">Copy</button></div>
+<pre data-dialect="duckdb"><code><span class="syn-command">duckdb</span> <span class="syn-flag">-c</span> &quot;
+  <span class="syn-keyword">SELECT</span> <span class="syn-keyword">DISTINCT</span> n.path <span class="syn-keyword">AS</span> page
+  <span class="syn-keyword">FROM</span> <span class="syn-string">&#39;./export/properties.parquet&#39;</span> p
+  <span class="syn-keyword">JOIN</span> <span class="syn-string">&#39;./export/nodes.parquet&#39;</span> n
+    <span class="syn-keyword">ON</span> n.path <span class="syn-punctuation">=</span> <span class="syn-function">split_part</span><span class="syn-punctuation">(</span>p.path<span class="syn-punctuation">,</span> <span class="syn-string">&#39;/jcr:content/&#39;</span><span class="syn-punctuation">,</span> <span class="syn-number">1</span><span class="syn-punctuation">)</span>
+  <span class="syn-keyword">WHERE</span> p.name <span class="syn-punctuation">=</span> <span class="syn-string">&#39;sling:resourceType&#39;</span>
+    <span class="syn-keyword">AND</span> p.value <span class="syn-punctuation">=</span> <span class="syn-string">&#39;mysite/components/teaser&#39;</span>
+    <span class="syn-keyword">AND</span> n.primary_type <span class="syn-punctuation">=</span> <span class="syn-string">&#39;cq:Page&#39;</span>
+  <span class="syn-keyword">ORDER</span> <span class="syn-keyword">BY</span> <span class="syn-number">1</span><span class="syn-punctuation">;</span>&quot;</code></pre>
+<pre data-dialect="sqlite" hidden><code><span class="syn-command">sqlite3</span> ./export.db &quot;
+  <span class="syn-keyword">SELECT</span> <span class="syn-keyword">DISTINCT</span> n.path <span class="syn-keyword">AS</span> page
+  <span class="syn-keyword">FROM</span> properties_expanded p
+  <span class="syn-keyword">JOIN</span> node_paths n
+    <span class="syn-keyword">ON</span> n.path <span class="syn-punctuation">=</span> <span class="syn-function">substr</span><span class="syn-punctuation">(</span>p.path<span class="syn-punctuation">,</span> <span class="syn-number">1</span><span class="syn-punctuation">,</span> <span class="syn-function">instr</span><span class="syn-punctuation">(</span>p.path<span class="syn-punctuation">,</span> <span class="syn-string">&#39;/jcr:content/&#39;</span><span class="syn-punctuation">)</span> <span class="syn-punctuation">-</span> <span class="syn-number">1</span><span class="syn-punctuation">)</span>
+  <span class="syn-keyword">WHERE</span> p.name <span class="syn-punctuation">=</span> <span class="syn-string">&#39;sling:resourceType&#39;</span>
+    <span class="syn-keyword">AND</span> p.value <span class="syn-punctuation">=</span> <span class="syn-string">&#39;mysite/components/teaser&#39;</span>
+    <span class="syn-keyword">AND</span> n.primary_type <span class="syn-punctuation">=</span> <span class="syn-string">&#39;cq:Page&#39;</span>
+  <span class="syn-keyword">ORDER</span> <span class="syn-keyword">BY</span> <span class="syn-number">1</span><span class="syn-punctuation">;</span>&quot;</code></pre>
+</div></div></details>
+<details class="recipe" id="template-pages">
+<summary><span>AEM pages using a template</span><span class="disclosure" aria-hidden="true">+</span></summary>
+<div class="recipe-body"><div class="recipe-note"><p>List pages whose jcr:content names the given cq:template; editable templates live under /conf, static ones under /apps.</p><a class="text-link" href="#template-pages" aria-label="Link to AEM pages using a template">Link to example</a></div><div class="recipe-code">
+<div class="recipe-toolbar"><span class="dialect-name">DuckDB / Parquet</span><button class="copy-query" aria-label="Copy AEM pages using a template query">Copy</button></div>
+<pre data-dialect="duckdb"><code><span class="syn-command">duckdb</span> <span class="syn-flag">-c</span> &quot;
+  <span class="syn-keyword">SELECT</span> n.path <span class="syn-keyword">AS</span> page
+  <span class="syn-keyword">FROM</span> <span class="syn-string">&#39;./export/properties.parquet&#39;</span> p
+  <span class="syn-keyword">JOIN</span> <span class="syn-string">&#39;./export/nodes.parquet&#39;</span> n
+    <span class="syn-keyword">ON</span> p.path <span class="syn-punctuation">=</span> n.path || <span class="syn-string">&#39;/jcr:content&#39;</span>
+  <span class="syn-keyword">WHERE</span> p.name <span class="syn-punctuation">=</span> <span class="syn-string">&#39;cq:template&#39;</span>
+    <span class="syn-keyword">AND</span> p.value <span class="syn-punctuation">=</span> <span class="syn-string">&#39;/conf/mysite/settings/wcm/templates/article-page&#39;</span>
+    <span class="syn-keyword">AND</span> n.primary_type <span class="syn-punctuation">=</span> <span class="syn-string">&#39;cq:Page&#39;</span>
+  <span class="syn-keyword">ORDER</span> <span class="syn-keyword">BY</span> <span class="syn-number">1</span><span class="syn-punctuation">;</span>&quot;</code></pre>
+<pre data-dialect="sqlite" hidden><code><span class="syn-command">sqlite3</span> ./export.db &quot;
+  <span class="syn-keyword">SELECT</span> n.path <span class="syn-keyword">AS</span> page
+  <span class="syn-keyword">FROM</span> properties_expanded p
+  <span class="syn-keyword">JOIN</span> node_paths n
+    <span class="syn-keyword">ON</span> p.path <span class="syn-punctuation">=</span> n.path || <span class="syn-string">&#39;/jcr:content&#39;</span>
+  <span class="syn-keyword">WHERE</span> p.name <span class="syn-punctuation">=</span> <span class="syn-string">&#39;cq:template&#39;</span>
+    <span class="syn-keyword">AND</span> p.value <span class="syn-punctuation">=</span> <span class="syn-string">&#39;/conf/mysite/settings/wcm/templates/article-page&#39;</span>
+    <span class="syn-keyword">AND</span> n.primary_type <span class="syn-punctuation">=</span> <span class="syn-string">&#39;cq:Page&#39;</span>
+  <span class="syn-keyword">ORDER</span> <span class="syn-keyword">BY</span> <span class="syn-number">1</span><span class="syn-punctuation">;</span>&quot;</code></pre>
+</div></div></details>
+<details class="recipe" id="template-usage">
+<summary><span>AEM page counts by template</span><span class="disclosure" aria-hidden="true">+</span></summary>
+<div class="recipe-body"><div class="recipe-note"><p>Count pages per cq:template; templates no page uses do not appear.</p><a class="text-link" href="#template-usage" aria-label="Link to AEM page counts by template">Link to example</a></div><div class="recipe-code">
+<div class="recipe-toolbar"><span class="dialect-name">DuckDB / Parquet</span><button class="copy-query" aria-label="Copy AEM page counts by template query">Copy</button></div>
+<pre data-dialect="duckdb"><code><span class="syn-command">duckdb</span> <span class="syn-flag">-c</span> &quot;
+  <span class="syn-keyword">SELECT</span> p.value <span class="syn-keyword">AS</span> template<span class="syn-punctuation">,</span> <span class="syn-function">count</span><span class="syn-punctuation">(</span><span class="syn-punctuation">*</span><span class="syn-punctuation">)</span> <span class="syn-keyword">AS</span> pages
+  <span class="syn-keyword">FROM</span> <span class="syn-string">&#39;./export/properties.parquet&#39;</span> p
+  <span class="syn-keyword">JOIN</span> <span class="syn-string">&#39;./export/nodes.parquet&#39;</span> n
+    <span class="syn-keyword">ON</span> p.path <span class="syn-punctuation">=</span> n.path || <span class="syn-string">&#39;/jcr:content&#39;</span>
+  <span class="syn-keyword">WHERE</span> p.name <span class="syn-punctuation">=</span> <span class="syn-string">&#39;cq:template&#39;</span>
+    <span class="syn-keyword">AND</span> n.primary_type <span class="syn-punctuation">=</span> <span class="syn-string">&#39;cq:Page&#39;</span>
+  <span class="syn-keyword">GROUP</span> <span class="syn-keyword">BY</span> <span class="syn-number">1</span>
+  <span class="syn-keyword">ORDER</span> <span class="syn-keyword">BY</span> pages <span class="syn-keyword">DESC</span><span class="syn-punctuation">,</span> <span class="syn-number">1</span><span class="syn-punctuation">;</span>&quot;</code></pre>
+<pre data-dialect="sqlite" hidden><code><span class="syn-command">sqlite3</span> ./export.db &quot;
+  <span class="syn-keyword">SELECT</span> p.value <span class="syn-keyword">AS</span> template<span class="syn-punctuation">,</span> <span class="syn-function">count</span><span class="syn-punctuation">(</span><span class="syn-punctuation">*</span><span class="syn-punctuation">)</span> <span class="syn-keyword">AS</span> pages
+  <span class="syn-keyword">FROM</span> properties_expanded p
+  <span class="syn-keyword">JOIN</span> node_paths n
+    <span class="syn-keyword">ON</span> p.path <span class="syn-punctuation">=</span> n.path || <span class="syn-string">&#39;/jcr:content&#39;</span>
+  <span class="syn-keyword">WHERE</span> p.name <span class="syn-punctuation">=</span> <span class="syn-string">&#39;cq:template&#39;</span>
+    <span class="syn-keyword">AND</span> n.primary_type <span class="syn-punctuation">=</span> <span class="syn-string">&#39;cq:Page&#39;</span>
+  <span class="syn-keyword">GROUP</span> <span class="syn-keyword">BY</span> <span class="syn-number">1</span>
+  <span class="syn-keyword">ORDER</span> <span class="syn-keyword">BY</span> pages <span class="syn-keyword">DESC</span><span class="syn-punctuation">,</span> <span class="syn-number">1</span><span class="syn-punctuation">;</span>&quot;</code></pre>
+</div></div></details>
+<details class="recipe" id="tagged-pages">
+<summary><span>AEM pages with a tag</span><span class="disclosure" aria-hidden="true">+</span></summary>
+<div class="recipe-body"><div class="recipe-note"><p>cq:tags is multivalued, so each tag is its own row; match the form your repository stores, a tag ID or a /content/cq:tags path.</p><a class="text-link" href="#tagged-pages" aria-label="Link to AEM pages with a tag">Link to example</a></div><div class="recipe-code">
+<div class="recipe-toolbar"><span class="dialect-name">DuckDB / Parquet</span><button class="copy-query" aria-label="Copy AEM pages with a tag query">Copy</button></div>
+<pre data-dialect="duckdb"><code><span class="syn-command">duckdb</span> <span class="syn-flag">-c</span> &quot;
+  <span class="syn-keyword">SELECT</span> n.path <span class="syn-keyword">AS</span> page
+  <span class="syn-keyword">FROM</span> <span class="syn-string">&#39;./export/properties.parquet&#39;</span> p
+  <span class="syn-keyword">JOIN</span> <span class="syn-string">&#39;./export/nodes.parquet&#39;</span> n
+    <span class="syn-keyword">ON</span> p.path <span class="syn-punctuation">=</span> n.path || <span class="syn-string">&#39;/jcr:content&#39;</span>
+  <span class="syn-keyword">WHERE</span> p.name <span class="syn-punctuation">=</span> <span class="syn-string">&#39;cq:tags&#39;</span>
+    <span class="syn-keyword">AND</span> p.value <span class="syn-punctuation">=</span> <span class="syn-string">&#39;mysite:topics/news&#39;</span>
+    <span class="syn-keyword">AND</span> n.primary_type <span class="syn-punctuation">=</span> <span class="syn-string">&#39;cq:Page&#39;</span>
+  <span class="syn-keyword">ORDER</span> <span class="syn-keyword">BY</span> <span class="syn-number">1</span><span class="syn-punctuation">;</span>&quot;</code></pre>
+<pre data-dialect="sqlite" hidden><code><span class="syn-command">sqlite3</span> ./export.db &quot;
+  <span class="syn-keyword">SELECT</span> n.path <span class="syn-keyword">AS</span> page
+  <span class="syn-keyword">FROM</span> properties_expanded p
+  <span class="syn-keyword">JOIN</span> node_paths n
+    <span class="syn-keyword">ON</span> p.path <span class="syn-punctuation">=</span> n.path || <span class="syn-string">&#39;/jcr:content&#39;</span>
+  <span class="syn-keyword">WHERE</span> p.name <span class="syn-punctuation">=</span> <span class="syn-string">&#39;cq:tags&#39;</span>
+    <span class="syn-keyword">AND</span> p.value <span class="syn-punctuation">=</span> <span class="syn-string">&#39;mysite:topics/news&#39;</span>
+    <span class="syn-keyword">AND</span> n.primary_type <span class="syn-punctuation">=</span> <span class="syn-string">&#39;cq:Page&#39;</span>
+  <span class="syn-keyword">ORDER</span> <span class="syn-keyword">BY</span> <span class="syn-number">1</span><span class="syn-punctuation">;</span>&quot;</code></pre>
+</div></div></details>
+<details class="recipe" id="asset-pages">
+<summary><span>AEM pages referencing an asset</span><span class="disclosure" aria-hidden="true">+</span></summary>
+<div class="recipe-body"><div class="recipe-note"><p>Find pages with a property whose value is exactly the asset path, such as fileReference; links inside rich text are not matched.</p><a class="text-link" href="#asset-pages" aria-label="Link to AEM pages referencing an asset">Link to example</a></div><div class="recipe-code">
+<div class="recipe-toolbar"><span class="dialect-name">DuckDB / Parquet</span><button class="copy-query" aria-label="Copy AEM pages referencing an asset query">Copy</button></div>
+<pre data-dialect="duckdb"><code><span class="syn-command">duckdb</span> <span class="syn-flag">-c</span> &quot;
+  <span class="syn-keyword">SELECT</span> <span class="syn-keyword">DISTINCT</span> n.path <span class="syn-keyword">AS</span> page<span class="syn-punctuation">,</span> p.name <span class="syn-keyword">AS</span> property
+  <span class="syn-keyword">FROM</span> <span class="syn-string">&#39;./export/properties.parquet&#39;</span> p
+  <span class="syn-keyword">JOIN</span> <span class="syn-string">&#39;./export/nodes.parquet&#39;</span> n
+    <span class="syn-keyword">ON</span> n.path <span class="syn-punctuation">=</span> <span class="syn-function">split_part</span><span class="syn-punctuation">(</span>p.path || <span class="syn-string">&#39;/&#39;</span><span class="syn-punctuation">,</span> <span class="syn-string">&#39;/jcr:content/&#39;</span><span class="syn-punctuation">,</span> <span class="syn-number">1</span><span class="syn-punctuation">)</span>
+  <span class="syn-keyword">WHERE</span> p.value <span class="syn-punctuation">=</span> <span class="syn-string">&#39;/content/dam/mysite/logo.svg&#39;</span>
+    <span class="syn-keyword">AND</span> n.primary_type <span class="syn-punctuation">=</span> <span class="syn-string">&#39;cq:Page&#39;</span>
+  <span class="syn-keyword">ORDER</span> <span class="syn-keyword">BY</span> <span class="syn-number">1</span><span class="syn-punctuation">,</span> <span class="syn-number">2</span><span class="syn-punctuation">;</span>&quot;</code></pre>
+<pre data-dialect="sqlite" hidden><code><span class="syn-command">sqlite3</span> ./export.db &quot;
+  <span class="syn-keyword">SELECT</span> <span class="syn-keyword">DISTINCT</span> n.path <span class="syn-keyword">AS</span> page<span class="syn-punctuation">,</span> p.name <span class="syn-keyword">AS</span> property
+  <span class="syn-keyword">FROM</span> properties_expanded p
+  <span class="syn-keyword">JOIN</span> node_paths n
+    <span class="syn-keyword">ON</span> n.path <span class="syn-punctuation">=</span> <span class="syn-function">substr</span><span class="syn-punctuation">(</span>p.path<span class="syn-punctuation">,</span> <span class="syn-number">1</span><span class="syn-punctuation">,</span> <span class="syn-function">instr</span><span class="syn-punctuation">(</span>p.path || <span class="syn-string">&#39;/&#39;</span><span class="syn-punctuation">,</span> <span class="syn-string">&#39;/jcr:content/&#39;</span><span class="syn-punctuation">)</span> <span class="syn-punctuation">-</span> <span class="syn-number">1</span><span class="syn-punctuation">)</span>
+  <span class="syn-keyword">WHERE</span> p.value <span class="syn-punctuation">=</span> <span class="syn-string">&#39;/content/dam/mysite/logo.svg&#39;</span>
+    <span class="syn-keyword">AND</span> n.primary_type <span class="syn-punctuation">=</span> <span class="syn-string">&#39;cq:Page&#39;</span>
+  <span class="syn-keyword">ORDER</span> <span class="syn-keyword">BY</span> <span class="syn-number">1</span><span class="syn-punctuation">,</span> <span class="syn-number">2</span><span class="syn-punctuation">;</span>&quot;</code></pre>
+</div></div></details>
+<details class="recipe" id="fragment-pages">
+<summary><span>Experience fragments on AEM pages</span><span class="disclosure" aria-hidden="true">+</span></summary>
+<div class="recipe-body"><div class="recipe-note"><p>Map each fragmentVariationPath placed in page content to its page; fragments in editable template structure live under /conf and are not listed.</p><a class="text-link" href="#fragment-pages" aria-label="Link to Experience fragments on AEM pages">Link to example</a></div><div class="recipe-code">
+<div class="recipe-toolbar"><span class="dialect-name">DuckDB / Parquet</span><button class="copy-query" aria-label="Copy Experience fragments on AEM pages query">Copy</button></div>
+<pre data-dialect="duckdb"><code><span class="syn-command">duckdb</span> <span class="syn-flag">-c</span> &quot;
+  <span class="syn-keyword">SELECT</span> p.value <span class="syn-keyword">AS</span> fragment<span class="syn-punctuation">,</span> n.path <span class="syn-keyword">AS</span> page
+  <span class="syn-keyword">FROM</span> <span class="syn-string">&#39;./export/properties.parquet&#39;</span> p
+  <span class="syn-keyword">JOIN</span> <span class="syn-string">&#39;./export/nodes.parquet&#39;</span> n
+    <span class="syn-keyword">ON</span> n.path <span class="syn-punctuation">=</span> <span class="syn-function">split_part</span><span class="syn-punctuation">(</span>p.path<span class="syn-punctuation">,</span> <span class="syn-string">&#39;/jcr:content/&#39;</span><span class="syn-punctuation">,</span> <span class="syn-number">1</span><span class="syn-punctuation">)</span>
+  <span class="syn-keyword">WHERE</span> p.name <span class="syn-punctuation">=</span> <span class="syn-string">&#39;fragmentVariationPath&#39;</span>
+    <span class="syn-keyword">AND</span> n.primary_type <span class="syn-punctuation">=</span> <span class="syn-string">&#39;cq:Page&#39;</span>
+  <span class="syn-keyword">ORDER</span> <span class="syn-keyword">BY</span> <span class="syn-number">1</span><span class="syn-punctuation">,</span> <span class="syn-number">2</span><span class="syn-punctuation">;</span>&quot;</code></pre>
+<pre data-dialect="sqlite" hidden><code><span class="syn-command">sqlite3</span> ./export.db &quot;
+  <span class="syn-keyword">SELECT</span> p.value <span class="syn-keyword">AS</span> fragment<span class="syn-punctuation">,</span> n.path <span class="syn-keyword">AS</span> page
+  <span class="syn-keyword">FROM</span> properties_expanded p
+  <span class="syn-keyword">JOIN</span> node_paths n
+    <span class="syn-keyword">ON</span> n.path <span class="syn-punctuation">=</span> <span class="syn-function">substr</span><span class="syn-punctuation">(</span>p.path<span class="syn-punctuation">,</span> <span class="syn-number">1</span><span class="syn-punctuation">,</span> <span class="syn-function">instr</span><span class="syn-punctuation">(</span>p.path<span class="syn-punctuation">,</span> <span class="syn-string">&#39;/jcr:content/&#39;</span><span class="syn-punctuation">)</span> <span class="syn-punctuation">-</span> <span class="syn-number">1</span><span class="syn-punctuation">)</span>
+  <span class="syn-keyword">WHERE</span> p.name <span class="syn-punctuation">=</span> <span class="syn-string">&#39;fragmentVariationPath&#39;</span>
+    <span class="syn-keyword">AND</span> n.primary_type <span class="syn-punctuation">=</span> <span class="syn-string">&#39;cq:Page&#39;</span>
+  <span class="syn-keyword">ORDER</span> <span class="syn-keyword">BY</span> <span class="syn-number">1</span><span class="syn-punctuation">,</span> <span class="syn-number">2</span><span class="syn-punctuation">;</span>&quot;</code></pre>
+</div></div></details>
+<details class="recipe" id="stale-pages">
+<summary><span>AEM pages not modified since a date</span><span class="disclosure" aria-hidden="true">+</span></summary>
+<div class="recipe-body"><div class="recipe-note"><p>Compare cq:lastModified as a timestamp, so time zone offsets are honored; pages never edited have no cq:lastModified and are not listed.</p><a class="text-link" href="#stale-pages" aria-label="Link to AEM pages not modified since a date">Link to example</a></div><div class="recipe-code">
+<div class="recipe-toolbar"><span class="dialect-name">DuckDB / Parquet</span><button class="copy-query" aria-label="Copy AEM pages not modified since a date query">Copy</button></div>
+<pre data-dialect="duckdb"><code><span class="syn-command">duckdb</span> <span class="syn-flag">-c</span> &quot;
+  <span class="syn-keyword">SELECT</span> n.path <span class="syn-keyword">AS</span> page<span class="syn-punctuation">,</span> p.value <span class="syn-keyword">AS</span> last_modified
+  <span class="syn-keyword">FROM</span> <span class="syn-string">&#39;./export/properties.parquet&#39;</span> p
+  <span class="syn-keyword">JOIN</span> <span class="syn-string">&#39;./export/nodes.parquet&#39;</span> n
+    <span class="syn-keyword">ON</span> p.path <span class="syn-punctuation">=</span> n.path || <span class="syn-string">&#39;/jcr:content&#39;</span>
+  <span class="syn-keyword">WHERE</span> p.name <span class="syn-punctuation">=</span> <span class="syn-string">&#39;cq:lastModified&#39;</span>
+    <span class="syn-keyword">AND</span> p.property_type <span class="syn-punctuation">=</span> <span class="syn-string">&#39;Date&#39;</span>
+    <span class="syn-keyword">AND</span> n.primary_type <span class="syn-punctuation">=</span> <span class="syn-string">&#39;cq:Page&#39;</span>
+    <span class="syn-keyword">AND</span> <span class="syn-function">CAST</span><span class="syn-punctuation">(</span>p.value <span class="syn-keyword">AS</span> TIMESTAMPTZ<span class="syn-punctuation">)</span> <span class="syn-punctuation">&lt;</span> TIMESTAMPTZ <span class="syn-string">&#39;2025-01-01 00:00:00+00&#39;</span>
+  <span class="syn-keyword">ORDER</span> <span class="syn-keyword">BY</span> <span class="syn-function">CAST</span><span class="syn-punctuation">(</span>p.value <span class="syn-keyword">AS</span> TIMESTAMPTZ<span class="syn-punctuation">)</span><span class="syn-punctuation">;</span>&quot;</code></pre>
+<pre data-dialect="sqlite" hidden><code><span class="syn-command">sqlite3</span> ./export.db &quot;
+  <span class="syn-keyword">SELECT</span> n.path <span class="syn-keyword">AS</span> page<span class="syn-punctuation">,</span> p.value <span class="syn-keyword">AS</span> last_modified
+  <span class="syn-keyword">FROM</span> properties_expanded p
+  <span class="syn-keyword">JOIN</span> node_paths n
+    <span class="syn-keyword">ON</span> p.path <span class="syn-punctuation">=</span> n.path || <span class="syn-string">&#39;/jcr:content&#39;</span>
+  <span class="syn-keyword">WHERE</span> p.name <span class="syn-punctuation">=</span> <span class="syn-string">&#39;cq:lastModified&#39;</span>
+    <span class="syn-keyword">AND</span> p.property_type <span class="syn-punctuation">=</span> <span class="syn-string">&#39;Date&#39;</span>
+    <span class="syn-keyword">AND</span> n.primary_type <span class="syn-punctuation">=</span> <span class="syn-string">&#39;cq:Page&#39;</span>
+    <span class="syn-keyword">AND</span> <span class="syn-function">julianday</span><span class="syn-punctuation">(</span>p.value<span class="syn-punctuation">)</span> <span class="syn-punctuation">&lt;</span> <span class="syn-function">julianday</span><span class="syn-punctuation">(</span><span class="syn-string">&#39;2025-01-01&#39;</span><span class="syn-punctuation">)</span>
+  <span class="syn-keyword">ORDER</span> <span class="syn-keyword">BY</span> <span class="syn-function">julianday</span><span class="syn-punctuation">(</span>p.value<span class="syn-punctuation">)</span><span class="syn-punctuation">;</span>&quot;</code></pre>
+</div></div></details>
+<details class="recipe" id="editors">
+<summary><span>Last editors by page count</span><span class="disclosure" aria-hidden="true">+</span></summary>
+<div class="recipe-body"><div class="recipe-note"><p>Group pages by cq:lastModifiedBy; only the most recent editor is recorded on the page, earlier ones live in version history.</p><a class="text-link" href="#editors" aria-label="Link to Last editors by page count">Link to example</a></div><div class="recipe-code">
+<div class="recipe-toolbar"><span class="dialect-name">DuckDB / Parquet</span><button class="copy-query" aria-label="Copy Last editors by page count query">Copy</button></div>
+<pre data-dialect="duckdb"><code><span class="syn-command">duckdb</span> <span class="syn-flag">-c</span> &quot;
+  <span class="syn-keyword">SELECT</span> p.value <span class="syn-keyword">AS</span> editor<span class="syn-punctuation">,</span> <span class="syn-function">count</span><span class="syn-punctuation">(</span><span class="syn-punctuation">*</span><span class="syn-punctuation">)</span> <span class="syn-keyword">AS</span> pages
+  <span class="syn-keyword">FROM</span> <span class="syn-string">&#39;./export/properties.parquet&#39;</span> p
+  <span class="syn-keyword">JOIN</span> <span class="syn-string">&#39;./export/nodes.parquet&#39;</span> n
+    <span class="syn-keyword">ON</span> p.path <span class="syn-punctuation">=</span> n.path || <span class="syn-string">&#39;/jcr:content&#39;</span>
+  <span class="syn-keyword">WHERE</span> p.name <span class="syn-punctuation">=</span> <span class="syn-string">&#39;cq:lastModifiedBy&#39;</span>
+    <span class="syn-keyword">AND</span> n.primary_type <span class="syn-punctuation">=</span> <span class="syn-string">&#39;cq:Page&#39;</span>
+  <span class="syn-keyword">GROUP</span> <span class="syn-keyword">BY</span> <span class="syn-number">1</span>
+  <span class="syn-keyword">ORDER</span> <span class="syn-keyword">BY</span> pages <span class="syn-keyword">DESC</span><span class="syn-punctuation">,</span> <span class="syn-number">1</span><span class="syn-punctuation">;</span>&quot;</code></pre>
+<pre data-dialect="sqlite" hidden><code><span class="syn-command">sqlite3</span> ./export.db &quot;
+  <span class="syn-keyword">SELECT</span> p.value <span class="syn-keyword">AS</span> editor<span class="syn-punctuation">,</span> <span class="syn-function">count</span><span class="syn-punctuation">(</span><span class="syn-punctuation">*</span><span class="syn-punctuation">)</span> <span class="syn-keyword">AS</span> pages
+  <span class="syn-keyword">FROM</span> properties_expanded p
+  <span class="syn-keyword">JOIN</span> node_paths n
+    <span class="syn-keyword">ON</span> p.path <span class="syn-punctuation">=</span> n.path || <span class="syn-string">&#39;/jcr:content&#39;</span>
+  <span class="syn-keyword">WHERE</span> p.name <span class="syn-punctuation">=</span> <span class="syn-string">&#39;cq:lastModifiedBy&#39;</span>
+    <span class="syn-keyword">AND</span> n.primary_type <span class="syn-punctuation">=</span> <span class="syn-string">&#39;cq:Page&#39;</span>
+  <span class="syn-keyword">GROUP</span> <span class="syn-keyword">BY</span> <span class="syn-number">1</span>
+  <span class="syn-keyword">ORDER</span> <span class="syn-keyword">BY</span> pages <span class="syn-keyword">DESC</span><span class="syn-punctuation">,</span> <span class="syn-number">1</span><span class="syn-punctuation">;</span>&quot;</code></pre>
+</div></div></details>
+<details class="recipe" id="missing-descriptions">
+<summary><span>AEM pages without a description</span><span class="disclosure" aria-hidden="true">+</span></summary>
+<div class="recipe-body"><div class="recipe-note"><p>Find site pages with no non-empty jcr:description, the page property most page components render as the meta description.</p><a class="text-link" href="#missing-descriptions" aria-label="Link to AEM pages without a description">Link to example</a></div><div class="recipe-code">
+<div class="recipe-toolbar"><span class="dialect-name">DuckDB / Parquet</span><button class="copy-query" aria-label="Copy AEM pages without a description query">Copy</button></div>
+<pre data-dialect="duckdb"><code><span class="syn-command">duckdb</span> <span class="syn-flag">-c</span> &quot;
+  <span class="syn-keyword">SELECT</span> n.path <span class="syn-keyword">AS</span> page
+  <span class="syn-keyword">FROM</span> <span class="syn-string">&#39;./export/nodes.parquet&#39;</span> n
+  <span class="syn-keyword">WHERE</span> n.primary_type <span class="syn-punctuation">=</span> <span class="syn-string">&#39;cq:Page&#39;</span>
+    <span class="syn-keyword">AND</span> n.path LIKE <span class="syn-string">&#39;/content/%&#39;</span>
+    <span class="syn-keyword">AND</span> n.path <span class="syn-keyword">NOT</span> LIKE <span class="syn-string">&#39;/content/experience-fragments/%&#39;</span>
+    <span class="syn-keyword">AND</span> <span class="syn-keyword">NOT</span> <span class="syn-keyword">EXISTS</span> <span class="syn-punctuation">(</span>
+      <span class="syn-keyword">SELECT</span> <span class="syn-number">1</span> <span class="syn-keyword">FROM</span> <span class="syn-string">&#39;./export/properties.parquet&#39;</span> p
+      <span class="syn-keyword">WHERE</span> p.path <span class="syn-punctuation">=</span> n.path || <span class="syn-string">&#39;/jcr:content&#39;</span>
+        <span class="syn-keyword">AND</span> p.name <span class="syn-punctuation">=</span> <span class="syn-string">&#39;jcr:description&#39;</span>
+        <span class="syn-keyword">AND</span> p.value <span class="syn-punctuation">&lt;</span><span class="syn-punctuation">&gt;</span> <span class="syn-string">&#39;&#39;</span>
+    <span class="syn-punctuation">)</span>
+  <span class="syn-keyword">ORDER</span> <span class="syn-keyword">BY</span> <span class="syn-number">1</span><span class="syn-punctuation">;</span>&quot;</code></pre>
+<pre data-dialect="sqlite" hidden><code><span class="syn-command">sqlite3</span> ./export.db &quot;
+  <span class="syn-keyword">SELECT</span> n.path <span class="syn-keyword">AS</span> page
+  <span class="syn-keyword">FROM</span> node_paths n
+  <span class="syn-keyword">WHERE</span> n.primary_type <span class="syn-punctuation">=</span> <span class="syn-string">&#39;cq:Page&#39;</span>
+    <span class="syn-keyword">AND</span> n.path LIKE <span class="syn-string">&#39;/content/%&#39;</span>
+    <span class="syn-keyword">AND</span> n.path <span class="syn-keyword">NOT</span> LIKE <span class="syn-string">&#39;/content/experience-fragments/%&#39;</span>
+    <span class="syn-keyword">AND</span> <span class="syn-keyword">NOT</span> <span class="syn-keyword">EXISTS</span> <span class="syn-punctuation">(</span>
+      <span class="syn-keyword">SELECT</span> <span class="syn-number">1</span> <span class="syn-keyword">FROM</span> properties_expanded p
+      <span class="syn-keyword">WHERE</span> p.path <span class="syn-punctuation">=</span> n.path || <span class="syn-string">&#39;/jcr:content&#39;</span>
+        <span class="syn-keyword">AND</span> p.name <span class="syn-punctuation">=</span> <span class="syn-string">&#39;jcr:description&#39;</span>
+        <span class="syn-keyword">AND</span> p.value <span class="syn-punctuation">&lt;</span><span class="syn-punctuation">&gt;</span> <span class="syn-string">&#39;&#39;</span>
+    <span class="syn-punctuation">)</span>
+  <span class="syn-keyword">ORDER</span> <span class="syn-keyword">BY</span> <span class="syn-number">1</span><span class="syn-punctuation">;</span>&quot;</code></pre>
+</div></div></details>
+<details class="recipe" id="redirects">
+<summary><span>AEM pages that redirect</span><span class="disclosure" aria-hidden="true">+</span></summary>
+<div class="recipe-body"><div class="recipe-note"><p>List cq:redirectTarget values and whether the target is in the export; external URLs and partial exports report false.</p><a class="text-link" href="#redirects" aria-label="Link to AEM pages that redirect">Link to example</a></div><div class="recipe-code">
+<div class="recipe-toolbar"><span class="dialect-name">DuckDB / Parquet</span><button class="copy-query" aria-label="Copy AEM pages that redirect query">Copy</button></div>
+<pre data-dialect="duckdb"><code><span class="syn-command">duckdb</span> <span class="syn-flag">-c</span> &quot;
+  <span class="syn-keyword">SELECT</span>
+    n.path <span class="syn-keyword">AS</span> page<span class="syn-punctuation">,</span>
+    p.value <span class="syn-keyword">AS</span> target<span class="syn-punctuation">,</span>
+    t.path <span class="syn-keyword">IS</span> <span class="syn-keyword">NOT</span> <span class="syn-keyword">NULL</span> <span class="syn-keyword">AS</span> target_in_export
+  <span class="syn-keyword">FROM</span> <span class="syn-string">&#39;./export/properties.parquet&#39;</span> p
+  <span class="syn-keyword">JOIN</span> <span class="syn-string">&#39;./export/nodes.parquet&#39;</span> n
+    <span class="syn-keyword">ON</span> p.path <span class="syn-punctuation">=</span> n.path || <span class="syn-string">&#39;/jcr:content&#39;</span>
+  <span class="syn-keyword">LEFT</span> <span class="syn-keyword">JOIN</span> <span class="syn-string">&#39;./export/nodes.parquet&#39;</span> t
+    <span class="syn-keyword">ON</span> t.path <span class="syn-punctuation">=</span> p.value
+  <span class="syn-keyword">WHERE</span> p.name <span class="syn-punctuation">=</span> <span class="syn-string">&#39;cq:redirectTarget&#39;</span>
+    <span class="syn-keyword">AND</span> n.primary_type <span class="syn-punctuation">=</span> <span class="syn-string">&#39;cq:Page&#39;</span>
+  <span class="syn-keyword">ORDER</span> <span class="syn-keyword">BY</span> <span class="syn-number">1</span><span class="syn-punctuation">;</span>&quot;</code></pre>
+<pre data-dialect="sqlite" hidden><code><span class="syn-command">sqlite3</span> ./export.db &quot;
+  <span class="syn-keyword">SELECT</span>
+    n.path <span class="syn-keyword">AS</span> page<span class="syn-punctuation">,</span>
+    p.value <span class="syn-keyword">AS</span> target<span class="syn-punctuation">,</span>
+    t.path <span class="syn-keyword">IS</span> <span class="syn-keyword">NOT</span> <span class="syn-keyword">NULL</span> <span class="syn-keyword">AS</span> target_in_export
+  <span class="syn-keyword">FROM</span> properties_expanded p
+  <span class="syn-keyword">JOIN</span> node_paths n
+    <span class="syn-keyword">ON</span> p.path <span class="syn-punctuation">=</span> n.path || <span class="syn-string">&#39;/jcr:content&#39;</span>
+  <span class="syn-keyword">LEFT</span> <span class="syn-keyword">JOIN</span> node_paths t
+    <span class="syn-keyword">ON</span> t.path <span class="syn-punctuation">=</span> p.value
+  <span class="syn-keyword">WHERE</span> p.name <span class="syn-punctuation">=</span> <span class="syn-string">&#39;cq:redirectTarget&#39;</span>
+    <span class="syn-keyword">AND</span> n.primary_type <span class="syn-punctuation">=</span> <span class="syn-string">&#39;cq:Page&#39;</span>
+  <span class="syn-keyword">ORDER</span> <span class="syn-keyword">BY</span> <span class="syn-number">1</span><span class="syn-punctuation">;</span>&quot;</code></pre>
 </div></div></details><details class="recipe" id="oak-indexes">
 <summary><span>Oak index definitions</span><span class="disclosure" aria-hidden="true">+</span></summary>
 <div class="recipe-body"><div class="recipe-note"><p>Inventory index type, async lane and reindex flag; froe index list provides the dedicated store-level view.</p><a class="text-link" href="#oak-indexes" aria-label="Link to Oak index definitions">Link to example</a></div><div class="recipe-code">
@@ -149,6 +393,66 @@
         <span class="syn-keyword">AND</span> <span class="syn-function">substr</span><span class="syn-punctuation">(</span>p.path<span class="syn-punctuation">,</span> <span class="syn-number">1</span><span class="syn-punctuation">,</span> <span class="syn-function">length</span><span class="syn-punctuation">(</span>a.path<span class="syn-punctuation">)</span> <span class="syn-punctuation">+</span> <span class="syn-number">1</span><span class="syn-punctuation">)</span> <span class="syn-punctuation">&lt;</span><span class="syn-punctuation">&gt;</span> a.path || <span class="syn-string">&#39;/&#39;</span>
     <span class="syn-punctuation">)</span>
   <span class="syn-keyword">ORDER</span> <span class="syn-keyword">BY</span> a.path<span class="syn-punctuation">;</span>&quot;</code></pre>
+</div></div></details>
+<details class="recipe" id="asset-formats">
+<summary><span>DAM assets by MIME type</span><span class="disclosure" aria-hidden="true">+</span></summary>
+<div class="recipe-body"><div class="recipe-note"><p>Group assets by dc:format with the original renditions&#39; sizes; external binaries have no recorded length, so they are counted separately.</p><a class="text-link" href="#asset-formats" aria-label="Link to DAM assets by MIME type">Link to example</a></div><div class="recipe-code">
+<div class="recipe-toolbar"><span class="dialect-name">DuckDB / Parquet</span><button class="copy-query" aria-label="Copy DAM assets by MIME type query">Copy</button></div>
+<pre data-dialect="duckdb"><code><span class="syn-command">duckdb</span> <span class="syn-flag">-c</span> &quot;
+  <span class="syn-keyword">SELECT</span>
+    m.value <span class="syn-keyword">AS</span> mime_type<span class="syn-punctuation">,</span>
+    <span class="syn-function">count</span><span class="syn-punctuation">(</span><span class="syn-punctuation">*</span><span class="syn-punctuation">)</span> <span class="syn-keyword">AS</span> assets<span class="syn-punctuation">,</span>
+    <span class="syn-function">sum</span><span class="syn-punctuation">(</span>o.binary_length<span class="syn-punctuation">)</span> <span class="syn-keyword">AS</span> inline_bytes<span class="syn-punctuation">,</span>
+    <span class="syn-function">count</span><span class="syn-punctuation">(</span>o.binary_reference<span class="syn-punctuation">)</span> <span class="syn-keyword">AS</span> external
+  <span class="syn-keyword">FROM</span> <span class="syn-string">&#39;./export/properties.parquet&#39;</span> m
+  <span class="syn-keyword">JOIN</span> <span class="syn-string">&#39;./export/nodes.parquet&#39;</span> a
+    <span class="syn-keyword">ON</span> m.path <span class="syn-punctuation">=</span> a.path || <span class="syn-string">&#39;/jcr:content/metadata&#39;</span>
+  <span class="syn-keyword">LEFT</span> <span class="syn-keyword">JOIN</span> <span class="syn-string">&#39;./export/properties.parquet&#39;</span> o
+    <span class="syn-keyword">ON</span> o.path <span class="syn-punctuation">=</span> a.path || <span class="syn-string">&#39;/jcr:content/renditions/original/jcr:content&#39;</span>
+    <span class="syn-keyword">AND</span> o.name <span class="syn-punctuation">=</span> <span class="syn-string">&#39;jcr:data&#39;</span>
+  <span class="syn-keyword">WHERE</span> m.name <span class="syn-punctuation">=</span> <span class="syn-string">&#39;dc:format&#39;</span>
+    <span class="syn-keyword">AND</span> a.primary_type <span class="syn-punctuation">=</span> <span class="syn-string">&#39;dam:Asset&#39;</span>
+  <span class="syn-keyword">GROUP</span> <span class="syn-keyword">BY</span> <span class="syn-number">1</span>
+  <span class="syn-keyword">ORDER</span> <span class="syn-keyword">BY</span> assets <span class="syn-keyword">DESC</span><span class="syn-punctuation">,</span> <span class="syn-number">1</span><span class="syn-punctuation">;</span>&quot;</code></pre>
+<pre data-dialect="sqlite" hidden><code><span class="syn-command">sqlite3</span> ./export.db &quot;
+  <span class="syn-keyword">SELECT</span>
+    m.value <span class="syn-keyword">AS</span> mime_type<span class="syn-punctuation">,</span>
+    <span class="syn-function">count</span><span class="syn-punctuation">(</span><span class="syn-punctuation">*</span><span class="syn-punctuation">)</span> <span class="syn-keyword">AS</span> assets<span class="syn-punctuation">,</span>
+    <span class="syn-function">sum</span><span class="syn-punctuation">(</span>o.binary_length<span class="syn-punctuation">)</span> <span class="syn-keyword">AS</span> inline_bytes<span class="syn-punctuation">,</span>
+    <span class="syn-function">count</span><span class="syn-punctuation">(</span>o.binary_reference<span class="syn-punctuation">)</span> <span class="syn-keyword">AS</span> external
+  <span class="syn-keyword">FROM</span> properties_expanded m
+  <span class="syn-keyword">JOIN</span> node_paths a
+    <span class="syn-keyword">ON</span> m.path <span class="syn-punctuation">=</span> a.path || <span class="syn-string">&#39;/jcr:content/metadata&#39;</span>
+  <span class="syn-keyword">LEFT</span> <span class="syn-keyword">JOIN</span> properties_expanded o
+    <span class="syn-keyword">ON</span> o.path <span class="syn-punctuation">=</span> a.path || <span class="syn-string">&#39;/jcr:content/renditions/original/jcr:content&#39;</span>
+    <span class="syn-keyword">AND</span> o.name <span class="syn-punctuation">=</span> <span class="syn-string">&#39;jcr:data&#39;</span>
+  <span class="syn-keyword">WHERE</span> m.name <span class="syn-punctuation">=</span> <span class="syn-string">&#39;dc:format&#39;</span>
+    <span class="syn-keyword">AND</span> a.primary_type <span class="syn-punctuation">=</span> <span class="syn-string">&#39;dam:Asset&#39;</span>
+  <span class="syn-keyword">GROUP</span> <span class="syn-keyword">BY</span> <span class="syn-number">1</span>
+  <span class="syn-keyword">ORDER</span> <span class="syn-keyword">BY</span> assets <span class="syn-keyword">DESC</span><span class="syn-punctuation">,</span> <span class="syn-number">1</span><span class="syn-punctuation">;</span>&quot;</code></pre>
+</div></div></details>
+<details class="recipe" id="fragment-models">
+<summary><span>Content fragments by model</span><span class="disclosure" aria-hidden="true">+</span></summary>
+<div class="recipe-body"><div class="recipe-note"><p>Count content fragments per cq:model, read from each fragment&#39;s jcr:content/data node.</p><a class="text-link" href="#fragment-models" aria-label="Link to Content fragments by model">Link to example</a></div><div class="recipe-code">
+<div class="recipe-toolbar"><span class="dialect-name">DuckDB / Parquet</span><button class="copy-query" aria-label="Copy Content fragments by model query">Copy</button></div>
+<pre data-dialect="duckdb"><code><span class="syn-command">duckdb</span> <span class="syn-flag">-c</span> &quot;
+  <span class="syn-keyword">SELECT</span> p.value <span class="syn-keyword">AS</span> model<span class="syn-punctuation">,</span> <span class="syn-function">count</span><span class="syn-punctuation">(</span><span class="syn-punctuation">*</span><span class="syn-punctuation">)</span> <span class="syn-keyword">AS</span> fragments
+  <span class="syn-keyword">FROM</span> <span class="syn-string">&#39;./export/properties.parquet&#39;</span> p
+  <span class="syn-keyword">JOIN</span> <span class="syn-string">&#39;./export/nodes.parquet&#39;</span> a
+    <span class="syn-keyword">ON</span> p.path <span class="syn-punctuation">=</span> a.path || <span class="syn-string">&#39;/jcr:content/data&#39;</span>
+  <span class="syn-keyword">WHERE</span> p.name <span class="syn-punctuation">=</span> <span class="syn-string">&#39;cq:model&#39;</span>
+    <span class="syn-keyword">AND</span> a.primary_type <span class="syn-punctuation">=</span> <span class="syn-string">&#39;dam:Asset&#39;</span>
+  <span class="syn-keyword">GROUP</span> <span class="syn-keyword">BY</span> <span class="syn-number">1</span>
+  <span class="syn-keyword">ORDER</span> <span class="syn-keyword">BY</span> fragments <span class="syn-keyword">DESC</span><span class="syn-punctuation">,</span> <span class="syn-number">1</span><span class="syn-punctuation">;</span>&quot;</code></pre>
+<pre data-dialect="sqlite" hidden><code><span class="syn-command">sqlite3</span> ./export.db &quot;
+  <span class="syn-keyword">SELECT</span> p.value <span class="syn-keyword">AS</span> model<span class="syn-punctuation">,</span> <span class="syn-function">count</span><span class="syn-punctuation">(</span><span class="syn-punctuation">*</span><span class="syn-punctuation">)</span> <span class="syn-keyword">AS</span> fragments
+  <span class="syn-keyword">FROM</span> properties_expanded p
+  <span class="syn-keyword">JOIN</span> node_paths a
+    <span class="syn-keyword">ON</span> p.path <span class="syn-punctuation">=</span> a.path || <span class="syn-string">&#39;/jcr:content/data&#39;</span>
+  <span class="syn-keyword">WHERE</span> p.name <span class="syn-punctuation">=</span> <span class="syn-string">&#39;cq:model&#39;</span>
+    <span class="syn-keyword">AND</span> a.primary_type <span class="syn-punctuation">=</span> <span class="syn-string">&#39;dam:Asset&#39;</span>
+  <span class="syn-keyword">GROUP</span> <span class="syn-keyword">BY</span> <span class="syn-number">1</span>
+  <span class="syn-keyword">ORDER</span> <span class="syn-keyword">BY</span> fragments <span class="syn-keyword">DESC</span><span class="syn-punctuation">,</span> <span class="syn-number">1</span><span class="syn-punctuation">;</span>&quot;</code></pre>
 </div></div></details><details class="recipe" id="types-per-site">
 <summary><span>Sling resource types by site</span><span class="disclosure" aria-hidden="true">+</span></summary>
 <div class="recipe-body"><div class="recipe-note"><p>Rank sling:resourceType usage within each site; ties can return more than five types.</p><a class="text-link" href="#types-per-site" aria-label="Link to Sling resource types by site">Link to example</a></div><div class="recipe-code">
