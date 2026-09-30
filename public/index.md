@@ -2,6 +2,8 @@
 
 > The repository. Directly from disk. Froe is a Rust CLI and library for reading and maintaining Apache Jackrabbit Oak segment stores (segment-tar / TarMK), including those used by AEM.
 
+Links: [Rust](https://www.rust-lang.org/) · [Apache Jackrabbit Oak](https://jackrabbit.apache.org/oak/) · [segment-tar / TarMK](https://jackrabbit.apache.org/oak/docs/nodestore/segment/overview.html) · [Adobe Experience Manager](https://experienceleague.adobe.com/en/docs/experience-manager)
+
 Inspect, export, compare revisions and maintain offline. No running Oak instance. No JVM.
 
 Rust ≥ 1.89 · Linux, macOS & Windows · [Apache-2.0](https://github.com/koraytaylan/froe/blob/develop/LICENSE) · [Source](https://github.com/koraytaylan/froe) · [docs.rs/froe](https://docs.rs/froe)
@@ -59,7 +61,7 @@ froe index check /path/to/segmentstore
 # See the index guide for supported definitions.
 ```
 
-- **Read — no repository writes, no lock.** Traverse nodes, inspect segments, diff revisions, trace history and export typed properties as JSON lines, Parquet or SQLite.
+- **Read — no repository writes, no lock.** Traverse nodes, inspect segments, diff revisions, trace history and export typed properties as [JSON lines](https://jsonlines.org/), [Parquet](https://parquet.apache.org/) or [SQLite](https://sqlite.org/).
 - **Write — stopped repository, exclusive lock.** Compact, back up, restore, recover journals and manage checkpoints; mutating operations require confirmation.
 
 <a id="download"></a>
@@ -87,9 +89,9 @@ cargo build --release
 <a id="operations"></a>
 ## Repository operations
 
-- **Audit a content snapshot.** Export nodes and typed properties, then query locally in DuckDB or SQLite; repeat Parquet exports decode changed subtrees. See the [SQL examples](#examples).
+- **Audit a content snapshot.** Export nodes and typed properties, then query locally in [DuckDB](https://duckdb.org/) or SQLite; repeat Parquet exports decode changed subtrees. See the [SQL examples](#examples).
 - **Recover a missing journal.** Use `check` to inspect consistency, then `recover-journal` to reconstruct the journal from surviving segments with Oak stopped. See the [recovery workflow](https://github.com/koraytaylan/froe/blob/develop/README.md).
-- **Inspect and rebuild indexes.** Read index definitions and check their indexed state; dump Lucene data or import and reindex offline, subject to supported features. See the [index guide](https://github.com/koraytaylan/froe/blob/develop/docs/index.md) (import/reindex beta).
+- **Inspect and rebuild indexes.** Read index definitions and check their indexed state; dump [Lucene](https://lucene.apache.org/) data or import and reindex offline, subject to supported features. See the [index guide](https://github.com/koraytaylan/froe/blob/develop/docs/index.md) (import/reindex beta).
 
 <a id="examples"></a>
 ## SQL over an AEM repository export
@@ -549,7 +551,7 @@ sqlite3 ./export.db "
 Source is the specification.
 
 - Reads `store.version` 1 and 2; maintenance targets version 2, with conditional upgrades for version 1 cleanup.
-- Write-path interoperability is tested with Oak 1.90.0 in Apache Sling; AEM itself and external blob stores remain unverified. See the [interoperability test contract](https://github.com/koraytaylan/froe/blob/develop/docs/interop.md).
+- Write-path interoperability is tested with Oak 1.90.0 in [Apache Sling](https://sling.apache.org/); AEM itself and external blob stores remain unverified. See the [interoperability test contract](https://github.com/koraytaylan/froe/blob/develop/docs/interop.md).
 - Lucene index import and reindex are beta in v0.12.0; unsupported rebuild features are refused rather than approximated.
 
 - [Storage format](https://github.com/koraytaylan/froe/blob/develop/docs/storage-format.md): archives, segments and record encodings.
