@@ -2,7 +2,7 @@
 
 > A Rust CLI and library for reading and maintaining Apache Jackrabbit Oak segment stores (segment-tar / TarMK), including those used by AEM. Directly from disk: no running Oak instance, no JVM.
 
-Read commands take no lock and write nothing, so they work on a live or stopped repository. Maintenance (compaction, backup, restore, journal recovery, checkpoints) needs a stopped repository and an exclusive lock, and asks for confirmation. Exports produce JSON lines, Parquet or SQLite for querying in DuckDB or SQLite.
+Read commands take no lock and write nothing, so they work on a live or stopped repository. Maintenance (compaction, backup, restore, journal recovery, checkpoints) needs a stopped repository and an exclusive lock, and asks for confirmation. Exports produce JSON lines, Parquet or SQLite, so repository content can be queried with full SQL in DuckDB or SQLite: COUNT, GROUP BY, HAVING, CTEs, window functions and joins, with no dependence on Oak indexes and no load on the running instance. Oak's own JCR-SQL2 has none of those aggregates or CTEs, and traverses the repository when no index covers a query.
 
 ## Docs
 

@@ -104,8 +104,8 @@ froe export /path/to/segmentstore --format parquet --output ./export
 froe export /path/to/segmentstore --format sqlite --output ./export.db
 ```
 
-- **JCR-SQL2 inside Oak: selects nodes, needs an index.** No `COUNT`, `GROUP BY`, `HAVING`, CTEs or window functions. A query no index covers traverses the repository on the running instance, and Oak stops it after 100,000 reads by default.
-- **SQL over an export: any query, no index to plan for.** Aggregates, CTEs, window functions and joins in DuckDB or SQLite, against files on your machine. Every query scans or joins the export; none of them can slow down the instance.
+- **Froe: full SQL over an export, no index to plan for.** With Froe you query an export in DuckDB or SQLite, so `COUNT`, `GROUP BY`, `HAVING`, CTEs, window functions and joins all work. Froe queries never depend on an Oak index and never touch the running instance.
+- **For comparison, Oak's JCR-SQL2 only selects nodes.** Oak's JCR-SQL2 has no `COUNT`, `GROUP BY`, `HAVING`, CTEs or window functions. In Oak, a query no index covers traverses the live repository, and Oak stops it after 100,000 reads by default.
 
 Parquet stores one row per node and one row per property value; SQLite exposes `node_paths` and `properties_expanded`. Completed Parquet exports carry matching revision stamps, but a query during file replacement can observe a mixed pair; see the [export consistency contract](https://github.com/koraytaylan/froe/blob/develop/README.md#quick-start).
 
