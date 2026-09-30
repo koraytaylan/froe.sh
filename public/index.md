@@ -4,7 +4,7 @@
 
 Inspect, export, compare revisions and maintain offline. No running Oak instance. No JVM.
 
-Rust ≥ 1.89 · Linux & macOS · [Apache-2.0](https://github.com/koraytaylan/froe/blob/develop/LICENSE) · [Source](https://github.com/koraytaylan/froe) · [docs.rs/froe](https://docs.rs/froe)
+Rust ≥ 1.89 · Linux, macOS & Windows · [Apache-2.0](https://github.com/koraytaylan/froe/blob/develop/LICENSE) · [Source](https://github.com/koraytaylan/froe) · [docs.rs/froe](https://docs.rs/froe)
 
 <a id="commands"></a>
 ## Working with a store
