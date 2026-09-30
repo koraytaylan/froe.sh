@@ -8,11 +8,13 @@ Read commands take no lock and write nothing, so they work on a live or stopped 
 
 - [The site, in markdown](https://froe.sh/index.md): The same account as the homepage, without the page chrome.
 - [Source](https://github.com/koraytaylan/froe): The CLI, the core library and the documentation. Apache-2.0 license.
+- [Releases](https://github.com/koraytaylan/froe/releases/latest): Prebuilt binaries, SHA256SUMS and the changelog.
 - [API reference](https://docs.rs/froe): The core crate's repository traversal API.
 
 ## Optional
 
 - [Working with a store](https://froe.sh/index.md#commands): Inspect, export, maintain and index commands.
+- [Download](https://froe.sh/index.md#download): Prebuilt Linux, macOS and Windows binaries from the latest GitHub release.
 - [Build from source](https://froe.sh/index.md#build): Clone, `cargo build --release`, one binary.
 - [SQL over an AEM repository export](https://froe.sh/index.md#examples): Thirteen DuckDB and SQLite recipes for auditing exported content.
 - [Implementation & reference](https://froe.sh/index.md#reference): Store versions, Oak interoperability and the storage-format, maintenance, index and feature-map documents.

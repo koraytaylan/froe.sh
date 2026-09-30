@@ -99,6 +99,16 @@ froe index check /path/to/segmentstore
 - **Read — no repository writes, no lock.** Traverse nodes, inspect segments, diff revisions, trace history and export typed properties as JSON lines, Parquet or SQLite.
 - **Write — stopped repository, exclusive lock.** Compact, back up, restore, recover journals and manage checkpoints; mutating operations require confirmation.
 
+<a id="download"></a>
+## Download
+
+Prebuilt binaries for every release are on [GitHub Releases]({GH}/releases/latest); verify archives against the release's `SHA256SUMS`.
+
+- Linux x86_64: `froe-<version>-x86_64-unknown-linux-musl.tar.gz` (static musl build)
+- Linux ARM64: `froe-<version>-aarch64-unknown-linux-musl.tar.gz` (static musl build)
+- macOS Apple silicon: `froe-<version>-aarch64-apple-darwin.tar.gz`
+- Windows x86_64: `froe-<version>-x86_64-pc-windows-msvc.zip`
+
 <a id="build"></a>
 ## Build from source
 
